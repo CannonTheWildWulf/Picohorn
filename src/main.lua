@@ -7,7 +7,7 @@ require 'util'
 require 'room'
 require 'autotiles'
 require 'tools'
-
+require 'menu'
 
 
 -- global constants
@@ -80,6 +80,8 @@ function newProject()
     end
 
     p8data = data
+
+    MenuPanel.load()
 end
 
 function toScreen(x, y)

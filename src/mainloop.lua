@@ -80,50 +80,96 @@ function love.load(args)
     newProject()
     pushHistory()
 
-    checkmarkIm=love.graphics.newImage("checkmark.png")
+    checkmarkIm=love.graphics.newImage("assets/checkmark.png")
     checkmarkWithBg=love.graphics.newCanvas(checkmarkIm:getWidth()*5/4,checkmarkIm:getHeight()*5/4)
     love.graphics.setCanvas(checkmarkWithBg)
     love.graphics.clear(0x64/0xff,0x64/0xff,0x64/0xff)
     love.graphics.draw(checkmarkIm,checkmarkIm:getWidth()/8,checkmarkIm:getHeight()/8)
     love.graphics.setCanvas()
 
-    bgtileIm = love.graphics.newImage("bgtile.png")
+    bgtileIm = love.graphics.newImage("assets/bgtile.png")
     bgtileIm:setFilter("nearest")
 end
 
+local STYLE_TABS = {
+    window = {
+        spacing = {x = 1, y = 1},
+        padding = {x = 1, y = 1},
+    },
+    selectable = {
+        padding = {x = 0, y = 0},
+        rounding = 0,
+        ["normal"] = "#262626",
+        ["hover"] = "#262626",
+        ["pressed"] = "#262626",
+        ["normal active"] = "#000000",
+        ["hover active"] = "#000000",
+        ["pressed active"] = "#000000",
+        ["text normal active"] = "#00ff88",
+        ["text hover active"] = "#00ff88",
+        ["text pressed active"] = "#00ff88",
+    },
+    checkbox = {
+        ["cursor normal"] = checkmarkIm,
+        ["cursor hover"] = checkmarkIm
+    }
+}
+
+local STYLE_MENU = {
+    window = {
+        spacing = {x = 2, y = 4},
+        padding = {x = 2, y = 4},
+        ["fixed background"] = "#343434",
+    },
+    selectable = {
+        padding = {x = 0, y = 0},
+        rounding = 4,
+        ["normal"] = "#343434",
+        ["hover"] = "#000000",
+        ["pressed"] = "#000000",
+        ["normal active"] = "#000000",
+        ["hover active"] = "#000000",
+        ["pressed active"] = "#000000",
+        ["text normal active"] = "#00ff88",
+        ["text hover active"] = "#00ff88",
+        ["text pressed active"] = "#00ff88",
+    }
+}
+
+local STYLE_CONTEXT = {
+    window = {
+        spacing = {x = 1, y = 1},
+        padding = {x = 1, y = 1},
+        ["fixed background"] = "#343434",
+    },
+    selectable = {
+        padding = {x = 0, y = 0},
+        rounding = 0,
+        ["normal"] = "#343434",
+        ["hover"] = "#000000",
+        ["pressed"] = "#000000",
+        ["normal active"] = "#000000",
+        ["hover active"] = "#000000",
+        ["pressed active"] = "#000000",
+        ["text normal active"] = "#00ff88",
+        ["text hover active"] = "#00ff88",
+        ["text pressed active"] = "#00ff88",
+    }
+}
+
 function love.update(dt)
+
     app.W, app.H = love.graphics.getDimensions()
     local rpw = app.W * 0.10 -- room panel width
-    app.left, app.top = rpw, 0
+    app.left, app.top = rpw, 30
 
     ui:frameBegin()
     --ui:scale(2)
 
-    ui:stylePush {
-        window = {
-            spacing = {x = 1, y = 1},
-            padding = {x = 1, y = 1},
-        },
-        selectable = {
-            padding = {x = 0, y = 0},
-            ["normal"] = "#262626",
-            ["hover"] = "#262626",
-            ["pressed"] = "#262626",
-            ["normal active"] = "#000000",
-            ["hover active"] = "#000000",
-            ["pressed active"] = "#000000",
-            ["text normal active"] = "#00ff88",
-            ["text hover active"] = "#00ff88",
-            ["text pressed active"] = "#00ff88",
-        },
-        checkbox = {
-            ["cursor normal"] = checkmarkIm,
-            ["cursor hover"] = checkmarkIm
-        }
-    }
+    ui:stylePush(STYLE_TABS)
 
     -- room panel
-    if ui:windowBegin("Room Panel", 0, 0, rpw, app.H, {"scrollbar"}) then
+    if ui:windowBegin("Room Panel", 0, app.top, rpw, app.H, {"scrollbar"}) then
         ui:layoutRow("dynamic", 25*global_scale, 1)
         for n, room in ipairs(project.rooms) do
             local line = "["..n..""
@@ -151,7 +197,7 @@ function love.update(dt)
     -- tool panel
     if app.showToolPanel then
         local tpw = 16*8*tms + 18
-        if ui:windowBegin("Tool panel", app.W - tpw, 0, tpw, app.H) then
+        if ui:windowBegin("Tool panel", app.W - tpw, app.top, tpw, app.H) then
             -- tools list
             for i = 0, #toolslist - 1 do
                 if i%4 == 0 then
@@ -179,11 +225,29 @@ function love.update(dt)
     app.anyWindowHovered = ui:windowIsAnyHovered()
 
     ui:stylePop()
+    ui:stylePush(STYLE_MENU)
+
+    -- draw menubar
+    MenuPanel:panel()
+
+    ui:stylePush(STYLE_CONTEXT)
+
+    -- draw context menu
+    if app.context then
+        app.context:panel(ui, app.context_x, app.context_y)
+    end
+
+    ui:stylePop()
+    ui:stylePop()
 
     -- tool update
     app.tool:update(dt)
 
     ui:frameEnd()
+
+    if not app.contextHasFocus then
+        app.context = nil
+    end
 
     local x, y = love.mouse.getPosition()
     local mx, my = fromScreen(x, y)

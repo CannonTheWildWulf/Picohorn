@@ -1,8 +1,33 @@
+
+local get_cursor = love.mouse.getSystemCursor
+
+cursors = {
+    arrow = get_cursor("arrow"),
+    ibeam = get_cursor("ibeam"),
+    wait = get_cursor("wait"),
+    waitarrow = get_cursor("waitarrow"),
+    crosshair = get_cursor("crosshair"),
+    hand = get_cursor("hand"),
+    pan = love.mouse.newCursor("assets/mouse_pan.png",8,8),
+    sizeew = get_cursor("sizewe"),
+    sizens = get_cursor("sizens"),
+    sizenesw = get_cursor("sizenesw"),
+    sizenwse = get_cursor("sizenwse"),
+    sizeall = get_cursor("sizeall"),
+    no = get_cursor("no"),
+}
+
+function setCursor(curs)
+    love.mouse.setCursor( cursors[curs] )
+end
+
 function love.mousepressed(x, y, button, istouch, presses)
+    setCursor("arrow")
     if ui:mousepressed(x, y, button, istouch, presses) then
         return
     end
 
+    app.context = nil
     local clickedRoom = false
 
     local mx, my = fromScreen(x, y)
@@ -43,6 +68,7 @@ function love.mousepressed(x, y, button, istouch, presses)
     if button == 3
     or button == 1 and (love.keyboard.isDown("lshift") or not clickedRoom) then
         app.camMoveX, app.camMoveY = fromScreen(x, y)
+        setCursor("pan")
     end
 
     --tool mousepressed
@@ -61,6 +87,7 @@ function love.mousereleased(x, y, button, istouch, presses)
     app.roomResizeSideX, app.roomResizeSideY = nil, nil
 
     app.suppressMouse = false
+    setCursor("arrow")
 
     -- just save history every time a mouse button is released lol
     pushHistory()
@@ -115,5 +142,9 @@ function love.wheelmoved(x, y)
         nrmx, nrmy = fromScreen(mx, my)
         app.camX = app.camX + nrmx - rmx
         app.camY = app.camY + nrmy - rmy
+    end
+
+    if x ~= 0 then
+        app.camX = app.camX - x*16
     end
 end
